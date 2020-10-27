@@ -1,5 +1,5 @@
-清华校园网自动连接脚本.
-Tsinghua Tunet auto-connect script.
+# Tsinghua Tunet auto-connect script.
+## 清华校园网自动连接脚本.
 
 ### Usage
 
