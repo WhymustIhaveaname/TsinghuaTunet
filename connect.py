@@ -20,8 +20,6 @@ def log(msg,l=1,end="\n",logfile=LOGFILE):
 
 import requests,sys,json
 
-headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn"}
-
 def net_login(username,password_hash):
     """
         request: http://net.tsinghua.edu.cn/do_login.php
@@ -33,6 +31,7 @@ def net_login(username,password_hash):
             ac_id: 1
     """
     url='https://net.tsinghua.edu.cn/do_login.php'
+    headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn"}
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
     log("posting: %s"%(url))
     post=requests.post(url,headers=headers,data=data)
@@ -42,6 +41,7 @@ def net_login(username,password_hash):
 
 def test_network(test_url):
     try:
+        headers={"Accept":"*/*"}
         log("getting: %s"%(test_url))
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
@@ -54,7 +54,7 @@ def test_network(test_url):
 def test_and_reconnent(username,password_hash):
     """test online or not, if not, login"""
     import random
-    url_pool=["https://its.pku.edu.cn/","http://hpc.pku.edu.cn/"]
+    url_pool=["http://baidu.com","http://bing.com","http://github.com"]
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
