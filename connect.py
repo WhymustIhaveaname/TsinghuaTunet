@@ -34,10 +34,12 @@ def net_login(username,password_hash):
     headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn"}
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
     log("posting: %s"%(url))
-    post=requests.post(url,headers=headers,data=data)
-    content=post.content.decode(post.encoding)
-    log('%d: "%s"'%(post.status_code,content))
-    return content
+    try:
+        post=requests.post(url,headers=headers,data=data)
+        content=post.content.decode(post.encoding)
+        log('%d: "%s"'%(post.status_code,content))
+    except Exception as e:
+        log(e)
 
 def test_network(test_url):
     try:
