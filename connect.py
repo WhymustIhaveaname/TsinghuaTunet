@@ -31,7 +31,8 @@ def net_login(username,password_hash):
             ac_id: 1
     """
     url='https://net.tsinghua.edu.cn/do_login.php'
-    headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn"}
+    headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn",
+             "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
     log("posting: %s"%(url))
     try:
