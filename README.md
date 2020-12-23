@@ -29,7 +29,7 @@ Crontab is a time-based job scheduler in Unix-like computer operating systems. U
 # * * * * * <command to execute>
 * * * * * cd /dir/to/TsinghuaTunet && ./connect.py --test-first
 ```
-and save to run this script repeatedly every minute. Use `crontab -l` to confirm the configuration file is saved.
+and save to run this script repeatedly every minute. Note that you should first cd to the directory of TsinghuaTunet, or it will leave a log file in crontab's default directory. Use `crontab -l` to confirm the configuration file is saved. 
 
 ### 使用方法
 
@@ -59,4 +59,4 @@ Crontab是Linux系统中基于时间的任务管理程序。使用`crontab -e`�
 # * * * * * <command to execute>
 * * * * * cd /dir/to/TsinghuaTunet && ./connect.py --test-first
 ```
-并且保存退出来让脚本每分钟重复执行。使用`crontab -l`确认配置被保存了。
+并且保存退出来让脚本每分钟重复执行。注意要先cd至TsinghuaTunet的文件夹下，否则它的日志文件会留在当前文件夹。使用`crontab -l`确认配置被保存了。
