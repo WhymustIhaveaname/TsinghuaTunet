@@ -35,11 +35,11 @@ def net_login(username,password_hash):
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
     log("posting: %s"%(url))
     try:
-        post=requests.post(url,headers=headers,data=data)
+        post=requests.post(url,headers=headers,data=data,timeout=10)
         content=post.content.decode(post.encoding)
         log('%d: "%s"'%(post.status_code,content))
     except Exception as e:
-        log(e)
+        log("error happened: %s"%(e),l=2)
 
 def test_network(test_url):
     try:
