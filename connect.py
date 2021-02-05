@@ -30,15 +30,16 @@ def net_login(username,password_hash):
             password: {MD5_HEX}32_bit_hex
             ac_id: 1
     """
-    url='https://net.tsinghua.edu.cn/do_login.php'
+    url='http://net.tsinghua.edu.cn/do_login.php'
+    #url='http://auth4.tsinghua.edu.cn/index_161.html'
     headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn",
              "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
     log("posting: %s"%(url))
     try:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        post=requests.post(url,headers=headers,data=data,timeout=10,verify=False)
-        content=post.content.decode(post.encoding)
+        post=requests.post(url,headers=headers,data=data,timeout=10,verify=False,allow_redirects=True)
+        content=post.content.decode("gbk") #post.encoding is "ISO-8859-1" but it is wrong
         log('%d: "%s"'%(post.status_code,content))
     except Exception as e:
         log("error happened: %s"%(e),l=2)
