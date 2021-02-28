@@ -76,7 +76,7 @@ def test_and_reconnent(username,password_hash):
     if test_re==0:
         log("online already")
     else:
-        log("not online, reconnecting... reason:\n%s"%(test_re))
+        log("not online, reconnecting...\nreason: %s"%(test_re))
         net_login(username,password_hash)
 
 def gen_config():
