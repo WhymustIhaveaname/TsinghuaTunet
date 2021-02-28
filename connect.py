@@ -44,7 +44,12 @@ def net_login(username,password_hash):
     except Exception as e:
         log("error happened: %s"%(e),l=2)
 
-def test_network(test_url,forbid_word="清华"):
+def test_network(test_url,forbid_word="Tsinghua University Network"):
+    """
+        test by getting test_url
+        some times tsinghua will return its net login page and the status_code is still 200
+        so forbid_word have to be made sure not in the reply content
+    """
     try:
         headers={"Accept":"*/*"}
         log("getting: %s"%(test_url))
@@ -52,7 +57,9 @@ def test_network(test_url,forbid_word="清华"):
         if get.status_code==200:
             content=get.content.decode(get.encoding)
             if forbid_word in content:
-                return "get.status_code=%d but forbid_word %s in content: %s"%(get.status_code,keyword,content)
+                #not sure working or not
+                # the 555 is chosen such that the forbid_word will show if qsinghua's net page is returned
+                return "get.status_code=%d but forbid_word '%s' in content:\n%s"%(get.status_code,forbid_word,content[0:min(555,len(content))])
             else:
                 return 0
         else:
@@ -63,7 +70,8 @@ def test_network(test_url,forbid_word="清华"):
 def test_and_reconnent(username,password_hash):
     """test online or not, if not, login"""
     import random
-    url_pool=["http://baidu.com","http://bing.com","http://github.com"]
+    url_pool=["https://baidu.com","https://bing.com","https://github.com","http://baidu.com","http://bing.com","http://github.com"]
+    #url_pool=["http://net.tsinghua.edu.cn",] # for debugging
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
