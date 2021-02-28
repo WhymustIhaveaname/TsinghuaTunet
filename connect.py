@@ -39,20 +39,24 @@ def net_login(username,password_hash):
     try:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         post=requests.post(url,headers=headers,data=data,timeout=10,verify=False,allow_redirects=True)
-        content=post.content.decode("gbk") #post.encoding is "ISO-8859-1" but it is wrong
+        content=post.content.decode("gbk") # post.encoding is "ISO-8859-1" but it is wrong
         log('%d: "%s"'%(post.status_code,content))
     except Exception as e:
         log("error happened: %s"%(e),l=2)
 
-def test_network(test_url):
+def test_network(test_url,forbid_word="清华"):
     try:
         headers={"Accept":"*/*"}
         log("getting: %s"%(test_url))
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
-            return 0
+            content=get.content.decode(get.encoding)
+            if forbid_word in content:
+                return "get.status_code=%d but forbid_word %s in content: %s"%(get.status_code,keyword,content)
+            else:
+                return 0
         else:
-            return str(get.status_code)
+            return "get.status_code=%d"%(get.status_code,)
     except Exception as e:
         return str(e)
 
@@ -64,7 +68,7 @@ def test_and_reconnent(username,password_hash):
     if test_re==0:
         log("online already")
     else:
-        log("not online(%s), reconnecting..."%(test_re))
+        log("not online, reconnecting... reason:\n%s"%(test_re))
         net_login(username,password_hash)
 
 def gen_config():
