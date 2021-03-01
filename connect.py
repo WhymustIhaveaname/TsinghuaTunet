@@ -20,24 +20,10 @@ def log(msg,l=1,end="\n",logfile=LOGFILE):
 
 import requests,sys,json
 
-def net_login(username,password_hash,href="net"):
-    """
-        request: http://net.tsinghua.edu.cn/do_login.php
-        method: POST
-        post data:
-            action: login
-            username: username
-            password: {MD5_HEX}32_bit_hex
-            ac_id: 1
-    """
-    if href=="net":
-        url='http://net.tsinghua.edu.cn/do_login.php'
-    elif href=="auth4":
-        url="http://auth4.tsinghua.edu.cn/index_161.html"
-    else:
-        log("href (%s) illegal, using net.tsinghua..."%(href))
-        url='http://net.tsinghua.edu.cn/do_login.php'
-    #url='http://auth4.tsinghua.edu.cn/index_161.html'
+def auth4_login(username,password_hash):
+    log("Auth4 login is somewhat complicated. Please login on auth4 once then net should work. If not, please contect me.",l=2)
+    return
+    url="http://auth4.tsinghua.edu.cn/index_161.html"
     headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn",
              "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
     data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
@@ -49,6 +35,34 @@ def net_login(username,password_hash,href="net"):
         log('%d: "%s"'%(post.status_code,content))
     except Exception as e:
         log("error happened: %s"%(e),l=2)
+
+def net_login(username,password_hash):
+    """
+        request: http://net.tsinghua.edu.cn/do_login.php
+        method: POST
+        post data:
+            action: login
+            username: username
+            password: {MD5_HEX}32_bit_hex
+            ac_id: 1
+    """
+    url='http://net.tsinghua.edu.cn/do_login.php'
+    headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn",
+             "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
+    data={'action':'login','username':username,'password':password_hash,'ac_id':'1'}
+    log("posting: %s"%(url))
+    try:
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        post=requests.post(url,headers=headers,data=data,timeout=10,verify=False,allow_redirects=True)
+        content=post.content.decode("gbk") # post.encoding is "ISO-8859-1" but it is wrong
+    except Exception as e:
+        log("error happened: %s"%(e),l=2)
+
+    if "auth4.tsinghua.edu.cn" in content:
+        log("Tsinghua wants you to login via auth4, trying auth4...")
+        auth4_login(username,password_hash)
+    else:
+        log('%d: "%s"'%(post.status_code,content))
 
 def test_network(test_url,forbid_word="Tsinghua University Network"):
     """
@@ -62,13 +76,12 @@ def test_network(test_url,forbid_word="Tsinghua University Network"):
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
             content=get.content.decode(get.encoding)
-            if forbid_word in content:
+            """if forbid_word in content:
                 #not sure working or not
                 # the 555 is chosen such that the forbid_word will show if qsinghua's net page is returned
-                return "get.status_code=%d but forbid_word '%s' in content:\n%s"%(get.status_code,forbid_word,content[0:min(555,len(content))])
-            elif "auth4.tsinghua.edu.cn" in content:
-                log("get 'auth4.tsinghua.edu.cn' returned",l=2)
-                return 1
+                return "get.status_code=%d but forbid_word '%s' in content:\n%s"%(get.status_code,forbid_word,content[0:min(555,len(content))])"""
+            if "auth4.tsinghua.edu.cn" in content:
+                return 1 #some times tsinghua wants you to login via auth4
             else:
                 return 0
         else:
@@ -85,7 +98,8 @@ def test_and_reconnent(username,password_hash):
     if test_re==0:
         log("online already")
     elif test_re==1:
-        net_login(username,password_hash,href="auth4")
+        log("not online, reconnecting...\nreason: Tsinghua wants you to login via auth4")
+        auth4_login(username,password_hash)
     else:
         log("not online, reconnecting...\nreason: %s"%(test_re))
         net_login(username,password_hash)
@@ -101,7 +115,7 @@ def gen_config():
 
 if __name__ == '__main__':
     help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\n--gen-config"
-    if len(sys.argv)>=2 and (sys.argv[1]=="--test-first" or sys.argv[1]=="--connect"):
+    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4"):
         try:
             with open("config.json","r") as f:
                 config=json.load(f)
@@ -114,6 +128,8 @@ if __name__ == '__main__':
                 test_and_reconnent(username,password_hash)
             elif sys.argv[1]=="--connect":
                 net_login(username,password_hash)
+            elif sys.argv[1]=="--connect-auth4":
+                auth4_login(username,password_hash)
             else:
                 log(help_msg)
     elif len(sys.argv)>=2 and sys.argv[1]=="--gen-config":
