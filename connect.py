@@ -20,7 +20,7 @@ def log(msg,l=1,end="\n",logfile=LOGFILE):
 
 import requests,sys,json
 
-def net_login(username,password_hash):
+def net_login(username,password_hash,href="net"):
     """
         request: http://net.tsinghua.edu.cn/do_login.php
         method: POST
@@ -30,7 +30,13 @@ def net_login(username,password_hash):
             password: {MD5_HEX}32_bit_hex
             ac_id: 1
     """
-    url='http://net.tsinghua.edu.cn/do_login.php'
+    if href=="net":
+        url='http://net.tsinghua.edu.cn/do_login.php'
+    elif href=="auth4":
+        url="http://auth4.tsinghua.edu.cn/index_161.html"
+    else:
+        log("href (%s) illegal, using net.tsinghua..."%(href))
+        url='http://net.tsinghua.edu.cn/do_login.php'
     #url='http://auth4.tsinghua.edu.cn/index_161.html'
     headers={"Accept":"*/*","Host":"net.tsinghua.edu.cn",
              "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
@@ -60,6 +66,9 @@ def test_network(test_url,forbid_word="Tsinghua University Network"):
                 #not sure working or not
                 # the 555 is chosen such that the forbid_word will show if qsinghua's net page is returned
                 return "get.status_code=%d but forbid_word '%s' in content:\n%s"%(get.status_code,forbid_word,content[0:min(555,len(content))])
+            elif "auth4.tsinghua.edu.cn" in content:
+                log("get 'auth4.tsinghua.edu.cn' returned",l=2)
+                return 1
             else:
                 return 0
         else:
@@ -75,6 +84,8 @@ def test_and_reconnent(username,password_hash):
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
+    elif test_re==1:
+        net_login(username,password_hash,href="auth4")
     else:
         log("not online, reconnecting... reason:\n%s"%(test_re))
         net_login(username,password_hash)
