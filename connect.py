@@ -87,7 +87,7 @@ def test_and_reconnent(username,password_hash):
     elif test_re==1:
         net_login(username,password_hash,href="auth4")
     else:
-        log("not online, reconnecting... reason:\n%s"%(test_re))
+        log("not online, reconnecting...\nreason: %s"%(test_re))
         net_login(username,password_hash)
 
 def gen_config():
