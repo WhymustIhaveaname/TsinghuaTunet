@@ -21,7 +21,7 @@
 
 * 在 net 上下线后再用 auth4 登陆有时会失败.
 * 有时下线时间长了之后连网关都 ping 不通, 就更不要说登陆了.
-* 有时 auth 会报'请重新拿ip错误', 不知所云.
+* 有时 auth 会报'请重新拿ip错误', 不知所云.('error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.')
 
 ### 吐槽
 
