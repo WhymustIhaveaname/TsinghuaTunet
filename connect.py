@@ -201,7 +201,7 @@ def test_and_reconnent(username,password_hash,password):
         auth4_login(username,password)
     else:
         log("not online, reconnecting...\nreason: %s"%(test_re))
-        net_login(username,password_hash)
+        net_login(username,password_hash,password)
 
 def gen_config():
     import getpass,hashlib
