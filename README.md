@@ -33,9 +33,9 @@
 
 ### 感谢
 
-* (yuantailing/tunet-python)[https://github.com/yuantailing/tunet-python] （我 fork 到了 (WhymustIhaveaname/tunet-python)[https://github.com/WhymustIhaveaname/tunet-python]）
-* (深澜校园网登录的分析与python实现-北京理工大学版)[https://blog.csdn.net/qq_41797946/article/details/89417722]
-* (深澜认证协议分析,python模拟登录)[https://zhuanlan.zhihu.com/p/122556315]
+* [yuantailing/tunet-python](https://github.com/yuantailing/tunet-python) (我 fork 到了 [WhymustIhaveaname/tunet-python](https://github.com/WhymustIhaveaname/tunet-python))
+* [深澜校园网登录的分析与python实现-北京理工大学版](https://blog.csdn.net/qq_41797946/article/details/89417722)
+* [深澜认证协议分析,python模拟登录](https://zhuanlan.zhihu.com/p/122556315)
 
 
 ### 使用crontab重复执行脚本
