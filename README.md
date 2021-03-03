@@ -19,9 +19,9 @@
 
 ### Pain in the neck
 
-* 在 net 上下线后再用 auth4 登陆有时会失败.
+* auth4 下线后用 net 登陆, 提示跳转 auth4; 用 auth4 登陆提示请重新拿ip. net下线之后用auth4登陆, 显示已经在线; 用net登陆, 成功.
 * 有时下线时间长了之后连网关都 ping 不通, 就更不要说登陆了.
-* 有时 auth 会报'请重新拿ip错误', 不知所云.('error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.')
+* 重新拿ip错误不知所云: {'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.'}.
 
 ### 吐槽
 
