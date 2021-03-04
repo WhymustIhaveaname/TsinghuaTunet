@@ -174,7 +174,7 @@ def auth4_login(username,password):
         log('\t'.join([i for i in soup.text.split('\n') if i!='']))
     except:
         log("",l=3)
-        return -4"""
+        return -5"""
 
 """def usereg_login(username,password_hash):
     #login via usereg.tsinghua.edu.cn's '准入代认证'
