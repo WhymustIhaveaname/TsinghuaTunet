@@ -21,7 +21,6 @@
 
 * net 下线之后用 auth4 登陆会显示已经在线.
 * 有时下线时间长了之后连网关都 ping 不通 (不知道为什么), 就更不要说登陆了.
-* 重新拿ip错误不知所云: {'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.'}.
 
 ### 吐槽
 
