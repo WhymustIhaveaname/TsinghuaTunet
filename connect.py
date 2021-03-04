@@ -96,7 +96,6 @@ def xEncode(str, key):
         return l(v, False)
 
 import requests,sys,json,hashlib,base64,hmac,urllib3
-from bs4 import BeautifulSoup
 
 TIMEOUT=3
 
@@ -166,6 +165,7 @@ def auth4_login(username,password):
         return -3
     """
     try:
+        from bs4 import BeautifulSoup #make output pretty
         url="https://auth4.tsinghua.edu.cn/succeed_wired.php"
         params={'ac_id':'1','username':'syr20','ip':ip}
         g4=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
