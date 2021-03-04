@@ -3,6 +3,7 @@
 import traceback,time,math
 
 LOGFILE="connect.log"
+ERRORFILE="error.log"
 LOGLEVEL=("DEBUG","INFO","WARNING","ERROR","FATAL")
 
 def log(msg,l=1,end="\n",logfile=LOGFILE):
@@ -17,6 +18,9 @@ def log(msg,l=1,end="\n",logfile=LOGFILE):
     if l>=1:
         with open(logfile,"a") as f:
             f.write(tempstr)
+        if l>=2:
+            with open(ERRORFILE,'a') as f:
+                f.write(tempstr)
 
 # I do not know what it is, but I have to include it
 import struct
@@ -138,6 +142,19 @@ def auth4_login(username,password):
         log("exception in auth4 login",l=3)
         return -3
 
+def usereg_login(username,password_hash):
+    """
+        login via usereg.tsinghua.edu.cn's '准入代认证'
+        As there will be cookie, I use requests' session
+    """
+    log("usereg's login is auth4.",end=" press enter to quit...");input()
+    s=requests.Session()
+    s.headers={"Accept":"*/*","Host":"usereg.tsinghua.edu.cn","User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate"}
+    data={'action':'login','user_login_name':username,'user_password':password_hash.replace("{MD5_HEX}","")}
+    p1=s.post("http://usereg.tsinghua.edu.cn/do.php",data=data)
+    c1=p1.content.decode(p1.encoding)
+    s.headers['Cookie']=p1.headers['Set-Cookie'].split(';')[0]
+
 def net_login(username,password_hash,password):
     """
         request: http://net.tsinghua.edu.cn/do_login.php
@@ -213,8 +230,8 @@ def gen_config():
     log("dumped username and password's hash to config.json")
 
 if __name__ == '__main__':
-    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\n--gen-config"
-    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4"):
+    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4\n--gen-config"
+    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-usereg"):
         try:
             with open("config.json","r") as f:
                 config=json.load(f)
@@ -234,6 +251,8 @@ if __name__ == '__main__':
                 net_login(username,password_hash,password)
             elif sys.argv[1]=="--connect-auth4":
                 auth4_login(username,password)
+            elif sys.argv[1]=="--connect-usereg":
+                usereg_login(username,password_hash)
             else:
                 log(help_msg)
     elif len(sys.argv)>=2 and sys.argv[1]=="--gen-config":
