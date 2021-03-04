@@ -212,7 +212,7 @@ def net_login(username,password_hash,password):
         log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
         auth4_login(username,password)
     else:
-        log('%d: "%s"'%(post.status_code,content),l=2)
+        log('%d: "%s"'%(post.status_code,content))
 
 def test_network(test_url):
     """
