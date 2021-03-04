@@ -22,7 +22,9 @@ def log(msg,l=1,end="\n",logfile=LOGFILE):
             with open(ERRORFILE,'a') as f:
                 f.write(tempstr)
 
-# I do not know what it is, but I have to include it
+# used in auth4 login
+# I cannot understand this
+# but I have to include it
 import struct
 int2byte = struct.Struct(">B").pack
 def xEncode(str, key):
@@ -97,6 +99,7 @@ import requests,sys,json,hashlib,base64,hmac,urllib3
 
 TIMEOUT=3
 
+# again auth4's weird stuffs
 def weird_base64_encode(s):
     a='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
     b='LVoJPiCN2R8G90yg+hmFHuacZ1OWMnrsSTXkYpUq/3dlbfKwv6xztjI7DeBE45QA'
@@ -135,18 +138,15 @@ def auth4_login(username,password):
         c3=g3.content.decode(g3.encoding).strip()
         c3=json.loads(c3[len("callback("):-1])
         if c3['error']=='ok':
-            log({k:c3[k] for k in ["client_ip","error","res","suc_msg"] if k in c3})
+            log({k:c3[k] for k in ["client_ip","error","res","suc_msg"] if k in c3},l=2)
         else:
-            log(c3)
+            log(c3,l=2)
     except:
         log("exception in auth4 login",l=3)
         return -3
 
 def usereg_login(username,password_hash):
-    """
-        login via usereg.tsinghua.edu.cn's '准入代认证'
-        As there will be cookie, I use requests' session
-    """
+    """login via usereg.tsinghua.edu.cn's '准入代认证'"""
     log("usereg's login is auth4.",end=" press enter to quit...");input()
     s=requests.Session()
     s.headers={"Accept":"*/*","Host":"usereg.tsinghua.edu.cn","User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate"}
@@ -175,13 +175,13 @@ def net_login(username,password_hash,password):
         post=requests.post(url,headers=headers,data=data,timeout=TIMEOUT,verify=False,allow_redirects=True)
         content=post.content.decode("gbk") # post.encoding is "ISO-8859-1" but it is wrong
     except Exception as e:
-        log("error happened: %s"%(e),l=2)
+        log("error happened: %s"%(e),l=3)
 
     if "auth4.tsinghua.edu.cn" in content:                    #see comments for test_network
-        log("Tsinghua wants you to login via auth4, trying auth4...")
+        log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
         auth4_login(username,password)
     else:
-        log('%d: "%s"'%(post.status_code,content))
+        log('%d: "%s"'%(post.status_code,content),l=2)
 
 def test_network(test_url):
     """
@@ -214,10 +214,10 @@ def test_and_reconnent(username,password_hash,password):
     if test_re==0:
         log("online already")
     elif test_re==1:
-        log("not online, reconnecting...\nreason: Tsinghua wants you to login via auth4")
+        log("not online, reconnecting...\nreason: Tsinghua wants you to login via auth4",l=2)
         auth4_login(username,password)
     else:
-        log("not online, reconnecting...\nreason: %s"%(test_re))
+        log("not online, reconnecting...\nreason: %s"%(test_re),l=2)
         net_login(username,password_hash,password)
 
 def gen_config():
