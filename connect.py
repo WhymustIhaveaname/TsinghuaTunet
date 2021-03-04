@@ -96,6 +96,7 @@ def xEncode(str, key):
         return l(v, False)
 
 import requests,sys,json,hashlib,base64,hmac,urllib3
+from bs4 import BeautifulSoup
 
 TIMEOUT=3
 
@@ -126,8 +127,26 @@ def auth4_login(username,password):
     except:
         log("get challenge failed",l=3)
         return -1
+    #
+    try:
+        url="http://usereg.tsinghua.edu.cn/ip_login_import.php"
+        params={'actionType': 'searchNasId', 'ip': ip}
+        g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
+        c2=g2.content.decode(g2.encoding).strip()
+        if c2=='fail':
+            ac_id=1
+        elif c2.isnumeric():
+            ac_id=int(c2)
+            log("get ac_id: %s"%(ac_id))
+        else:
+            log("get ac_id abnormal: %s"%(c2),l=2)
+            ac_id=1
+        del url,params,g2
+    except:
+        log("exception in getting ac_id",l=3)
+        return -2
     # login!
-    ac_id=1;n=200;typ=1
+    n=200;typ=1
     try:
         url="https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
         info='{SRBX1}'+weird_base64_encode(xEncode(json.dumps({'username':username,'password':password,'ip':ip,'acid':ac_id,'enc_ver':'srun_bx1',}),token)).decode()
@@ -141,19 +160,31 @@ def auth4_login(username,password):
             log({k:c3[k] for k in ["client_ip","error","res","suc_msg"] if k in c3},l=2)
         else:
             log(c3,l=2)
+        del url,params,g3
     except:
         log("exception in auth4 login",l=3)
         return -3
+    """
+    try:
+        url="https://auth4.tsinghua.edu.cn/succeed_wired.php"
+        params={'ac_id':'1','username':'syr20','ip':ip}
+        g4=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
+        c4=g4.content.decode('utf-8').strip() # g4.encoding is ISO-8859-1 but actually it is utf8
+        soup = BeautifulSoup(c4,'lxml')
+        log('\t'.join([i for i in soup.text.split('\n') if i!='']))
+    except:
+        log("",l=3)
+        return -4"""
 
-def usereg_login(username,password_hash):
-    """login via usereg.tsinghua.edu.cn's '准入代认证'"""
+"""def usereg_login(username,password_hash):
+    #login via usereg.tsinghua.edu.cn's '准入代认证'
     log("usereg's login is auth4.",end=" press enter to quit...");input()
     s=requests.Session()
     s.headers={"Accept":"*/*","Host":"usereg.tsinghua.edu.cn","User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate"}
     data={'action':'login','user_login_name':username,'user_password':password_hash.replace("{MD5_HEX}","")}
     p1=s.post("http://usereg.tsinghua.edu.cn/do.php",data=data)
     c1=p1.content.decode(p1.encoding)
-    s.headers['Cookie']=p1.headers['Set-Cookie'].split(';')[0]
+    s.headers['Cookie']=p1.headers['Set-Cookie'].split(';')[0]"""
 
 def net_login(username,password_hash,password):
     """
