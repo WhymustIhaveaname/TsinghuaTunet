@@ -156,7 +156,7 @@ def auth4_login(username,password):
         c3=g3.content.decode(g3.encoding).strip()
         c3=json.loads(c3[len("callback("):-1])
         if c3['error']=='ok':
-            log({k:c3[k] for k in ["client_ip","error","res","suc_msg"] if k in c3},l=2)
+            log({k:c3[k] for k in ["client_ip","error","res","suc_msg"] if k in c3})
         else:
             log(c3,l=2)
         del url,params,g3
@@ -245,10 +245,10 @@ def test_and_reconnent(username,password_hash,password):
     if test_re==0:
         log("online already")
     elif test_re==1:
-        log("not online, reconnecting...\nreason: Tsinghua wants you to login via auth4",l=2)
+        log("not online, reconnecting... reason: Tsinghua wants you to login via auth4",l=2)
         auth4_login(username,password)
     else:
-        log("not online, reconnecting...\nreason: %s"%(test_re),l=2)
+        log("not online, reconnecting... reason: %s"%(test_re),l=2)
         net_login(username,password_hash,password)
 
 def gen_config():
