@@ -97,7 +97,7 @@ def xEncode(str, key):
 
 import requests,sys,json,hashlib,base64,hmac,urllib3
 
-TIMEOUT=3
+TIMEOUT=10
 
 # again auth4's weird stuffs
 def weird_base64_encode(s):
@@ -133,7 +133,9 @@ def auth4_login(username,password):
         g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
         c2=g2.content.decode(g2.encoding).strip()
         if c2=='fail':
-            ac_id=1
+            ac_id=39
+            log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
+            log("comment: 39 works for my laptop, but sometimes 161/162 also works. I do not know their meaning. Contact me if it is not working.")
         elif c2.isnumeric():
             ac_id=int(c2)
             log("get ac_id: %s"%(ac_id))
