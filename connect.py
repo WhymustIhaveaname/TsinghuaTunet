@@ -133,9 +133,10 @@ def auth4_login(username,password):
         g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
         c2=g2.content.decode(g2.encoding).strip()
         if c2=='fail':
-            ac_id=39
+            ac_id=1
             log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
-            log("comment: 39 works for my laptop, but sometimes 161/162 also works. I do not know their meaning. Contact me if it is not working.")
+            log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高，仅在 net 要求跳转 auth4 并且在 auth4 中请求 ac_id 失败时才会发生，据尝试设置 ac_id 为上述（可能不规范）的值可以成功联网。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
+            #近春园西楼39, 四教43, 27号楼宿舍162
         elif c2.isnumeric():
             ac_id=int(c2)
             log("get ac_id: %s"%(ac_id))
