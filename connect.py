@@ -223,7 +223,7 @@ def test_network(test_url):
         if get.status_code==200:
             content=get.content.decode(get.encoding)
             if "auth" in content and "tsinghua.edu.cn" in content: #some times tsinghua wants you to login via auth
-                return 1
+                return "Tsinghua wants you to login via auth"
             else:
                 return 0
         else:
@@ -239,9 +239,6 @@ def test_and_reconnent(username,password_hash,password):
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
-    elif test_re==1:
-        log("not online, reconnecting... reason: Tsinghua wants you to login via auth",l=2)
-        net_login(username,password_hash,password)
     else:
         log("not online, reconnecting... reason: %s"%(test_re),l=2)
         net_login(username,password_hash,password)
