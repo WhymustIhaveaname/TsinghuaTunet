@@ -5,7 +5,8 @@
 
 * `./connect.py --gen-config`: 生成配置文件;
 * `./connect.py --connect`   : 使用 net.tsinghua.edu.cn 连接 (推荐);
-* `./connect.py --connect-auth4`: 使用 auth4.tsinghua.edu.cn 连接 (不推荐);
+* `./connect.py --connect-auth4`: 使用 auth4.tsinghua.edu.cn 连接 (仅用于 debug);
+* `./connect.py --connect-auth6`: 使用 auth6.tsinghua.edu.cn 连接 (测试中);
 * `./connect.py --test-first`: 先测试网络, 不通再连接.
 
 首先用 `./connect.py --gen-config` 按提示输入用户名密码生成配置文件, 之后用 `./connect.py --connect` 或 `./connect.py --test-first` 连接.
@@ -16,11 +17,13 @@
 * 可以先测试网络是否通畅, 失败才重连.
 * 有时清华会强制让人跳转 auth4.tsinghua.edu.cn 连接, 脚本能够自动跳转.
 * 保存密码的哈希而不是明文 (但是使用auth4需要提供密码明文).
+* 支持 ipv4 和 ipv6.
 
 ### Pain in the neck
 
 * net 下线之后用 auth4 登陆会显示已经在线.
 * 有时下线时间长了之后连网关都 ping 不通 (不知道为什么), 就更不要说登陆了.
+* 登陆协议中的 ac_id 参数按“正统”的获取方法经常失败，只能通过 net 的返回获得. 如果设置了错误的 ac_id 会返回 `'ecode': '', 'error': 'login_error', 'error_msg': 'no_response_data_error', 'res': 'login_error'`, 如果按照 srun js 的逻辑直接设置 ac_id=1 则返回`'ecode': 'E2833', 'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.', 'res': 'login_error'`
 
 ### 吐槽
 

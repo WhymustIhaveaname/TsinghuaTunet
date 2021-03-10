@@ -106,15 +106,22 @@ def weird_base64_encode(s):
     s=base64.b64encode(s).decode()
     return s.translate({ord(x): y for (x, y) in zip(a, b)}).encode()
 
-def auth4_login(username,password,ac_id=None):
+def auth_login(username,password,ac_id=None,ipv=4):
+    """
+        password: plaintext of password
+        ac_id   : a messy parameter in srun's protocol
+        ipv     : ip version, 4 or 6
+    """
     if password==None:
-        log("please update (re-generate) config to get support for auth4",l=2)
+        log("please update (re-generate) config to get support for auth",l=2)
         return -4
-    headers={"Accept":"*/*","Host":"auth4.tsinghua.edu.cn",
+
+    headers={"Accept":"*/*",#"Host":"auth%d.tsinghua.edu.cn"%(ipv),
              "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
-    # get challenge. I do not know why
+
+    # get challenge. In srun's protocal but I do not know its meaning
     try:
-        url="https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge"
+        url="https://auth%d.tsinghua.edu.cn/cgi-bin/get_challenge"%(ipv)
         params={'callback':'callback','username':username,'ip':'','double_stack':'1','_':int(time.time()*1000)}
         g1=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
         c1=g1.content.decode(g1.encoding).strip()
@@ -139,8 +146,6 @@ def auth4_login(username,password,ac_id=None):
                 log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
                 log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
                 #近春园西楼39, 四教43, 27号楼宿舍162, 李兆基科技楼24
-                #ac_id=1: {'client_ip': 'x.x.x.x', 'ecode': 'E2833', 'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310934}
-                #wrong ac_id: {'client_ip': 'x.x.x.x', 'ecode': '', 'error': 'login_error', 'error_msg': 'no_response_data_error', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310922}
             elif c2.isnumeric():
                 ac_id=int(c2)
                 log("get ac_id: %s"%(ac_id))
@@ -157,7 +162,7 @@ def auth4_login(username,password,ac_id=None):
     # login!
     n=200;typ=1
     try:
-        url="https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
+        url="https://auth%d.tsinghua.edu.cn/cgi-bin/srun_portal"%(ipv)
         info='{SRBX1}'+weird_base64_encode(xEncode(json.dumps({'username':username,'password':password,'ip':ip,'acid':ac_id,'enc_ver':'srun_bx1',}),token)).decode()
         chksum=hashlib.sha1((token+username+token+hmd5+token+'%d'%(ac_id)+token+ip+token+'%d'%(n)+token+'%d'%(typ)+token+info).encode()).hexdigest()
         params={'callback':'callback','action':'login','username':username,'password':'{MD5}'+hmd5,
@@ -171,7 +176,7 @@ def auth4_login(username,password,ac_id=None):
             log(c3,l=2)
         del url,params,g3
     except:
-        log("exception in auth4 login",l=3)
+        log("exception in auth%d login"%(ipv),l=3)
         return -3
 
 def net_login(username,password_hash,password):
@@ -197,19 +202,19 @@ def net_login(username,password_hash,password):
         log("error happened: %s"%(e),l=3)
 
     s_auth=re.search("http://(auth[4,6]{0,1}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
-    if s_auth!=None:                    #see comments for test_network
-        log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
+    if s_auth!=None: #see comments for test_network
+        log("Tsinghua wants you to login via auth (%s), trying..."%(s_auth),l=2)
         ac_id=int(s_auth.group(2))
-        auth4_login(username,password,ac_id=ac_id)
+        auth_login(username,password,ac_id=ac_id)
     else:
         log('net return %d: "%s"'%(post.status_code,content))
 
 def test_network(test_url):
     """
         test by getting test_url
-        some times tsinghua wants you to login via auth4
-        so if there is 'auth4.tsinghua.edu.cn' in return webpage then return 1
-        meaning 'trying to login via auth4'
+        some times tsinghua wants you to login via auth
+        so if both 'auth' and 'tsinghua.edu.cn' in return webpage then return 1
+        meaning 'trying to login via auth'
     """
     try:
         headers={"Accept":"*/*"}
@@ -217,7 +222,7 @@ def test_network(test_url):
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
             content=get.content.decode(get.encoding)
-            if "auth" in content and "tsinghua.edu.cn" in content: #some times tsinghua wants you to login via auth4
+            if "auth" in content and "tsinghua.edu.cn" in content: #some times tsinghua wants you to login via auth
                 return 1
             else:
                 return 0
@@ -235,7 +240,7 @@ def test_and_reconnent(username,password_hash,password):
     if test_re==0:
         log("online already")
     elif test_re==1:
-        log("not online, reconnecting... reason: Tsinghua wants you to login via auth4",l=2)
+        log("not online, reconnecting... reason: Tsinghua wants you to login via auth",l=2)
         net_login(username,password)
     else:
         log("not online, reconnecting... reason: %s"%(test_re),l=2)
@@ -251,8 +256,8 @@ def gen_config():
     log("dumped username and password's hash to config.json")
 
 if __name__ == '__main__':
-    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4 (only for debug)\n--gen-config"
-    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-usereg"):
+    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4 (only for debug)\nconnect-auth6 (testing)\n--gen-config"
+    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-auth6"):
         try:
             with open("config.json","r") as f:
                 config=json.load(f)
@@ -271,9 +276,9 @@ if __name__ == '__main__':
             elif sys.argv[1]=="--connect":
                 net_login(username,password_hash,password)
             elif sys.argv[1]=="--connect-auth4":
-                auth4_login(username,password)
-            elif sys.argv[1]=="--connect-usereg":
-                usereg_login(username,password_hash)
+                auth_login(username,password,ipv=4)
+            elif sys.argv[1]=="--connect-auth6":
+                auth_login(username,password,ipv=6)
             else:
                 log(help_msg)
     elif len(sys.argv)>=2 and sys.argv[1]=="--gen-config":
