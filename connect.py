@@ -218,7 +218,7 @@ def net_login(username,password_hash,password):
     except Exception as e:
         log("error happened: %s"%(e),l=3)
 
-    s_auth=re.search("http://(auth[4,6]{0}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
+    s_auth=re.search("http://(auth[4,6]{0,1}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
     if s_auth!=None:                    #see comments for test_network
         log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
         ac_id=int(s_auth.group(2))
