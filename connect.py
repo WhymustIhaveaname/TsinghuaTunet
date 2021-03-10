@@ -241,7 +241,7 @@ def test_and_reconnent(username,password_hash,password):
         log("online already")
     elif test_re==1:
         log("not online, reconnecting... reason: Tsinghua wants you to login via auth",l=2)
-        net_login(username,password)
+        net_login(username,password_hash,password)
     else:
         log("not online, reconnecting... reason: %s"%(test_re),l=2)
         net_login(username,password_hash,password)
