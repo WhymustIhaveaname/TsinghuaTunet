@@ -95,7 +95,7 @@ def xEncode(str, key):
             z = v[n] = v[n] + m & (0xBB390742 | 0x44C6F8BD)
         return l(v, False)
 
-import requests,sys,json,hashlib,base64,hmac,urllib3
+import requests,sys,json,hashlib,base64,hmac,urllib3,re
 
 TIMEOUT=10
 
@@ -106,7 +106,7 @@ def weird_base64_encode(s):
     s=base64.b64encode(s).decode()
     return s.translate({ord(x): y for (x, y) in zip(a, b)}).encode()
 
-def auth4_login(username,password):
+def auth4_login(username,password,ac_id=None):
     if password==None:
         log("please update (re-generate) config to get support for auth4",l=2)
         return -4
@@ -126,27 +126,34 @@ def auth4_login(username,password):
     except:
         log("get challenge failed",l=3)
         return -1
-    #
-    try:
-        url="http://usereg.tsinghua.edu.cn/ip_login_import.php"
-        params={'actionType': 'searchNasId', 'ip': ip}
-        g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
-        c2=g2.content.decode(g2.encoding).strip()
-        if c2=='fail':
-            ac_id=1
-            log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
-            log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高，仅在 net 要求跳转 auth4 并且在 auth4 中请求 ac_id 失败时才会发生，据尝试设置 ac_id 为上述（可能不规范）的值可以成功联网。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
-            #近春园西楼39, 四教43, 27号楼宿舍162
-        elif c2.isnumeric():
-            ac_id=int(c2)
-            log("get ac_id: %s"%(ac_id))
-        else:
-            log("get ac_id abnormal: %s"%(c2),l=2)
-            ac_id=1
-        del url,params,g2
-    except:
-        log("exception in getting ac_id",l=3)
-        return -2
+
+    #get ac_id
+    if ac_id==None:
+        try:
+            url="http://usereg.tsinghua.edu.cn/ip_login_import.php"
+            params={'actionType': 'searchNasId', 'ip': ip}
+            g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
+            c2=g2.content.decode(g2.encoding).strip()
+            if c2=='fail':
+                ac_id=1
+                log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
+                log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
+                #近春园西楼39, 四教43, 27号楼宿舍162, 24
+                #ac_id=1: {'client_ip': 'x.x.x.x', 'ecode': 'E2833', 'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310934}
+                #wrong ac_id: {'client_ip': 'x.x.x.x', 'ecode': '', 'error': 'login_error', 'error_msg': 'no_response_data_error', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310922}
+            elif c2.isnumeric():
+                ac_id=int(c2)
+                log("get ac_id: %s"%(ac_id))
+            else:
+                log("get ac_id abnormal: %s"%(c2),l=2)
+                ac_id=1
+            del url,params,g2
+        except:
+            log("exception in getting ac_id",l=3)
+            return -2
+    else:
+        log("using passed-in ac_id=%d"%(ac_id))
+
     # login!
     n=200;typ=1
     try:
@@ -211,11 +218,13 @@ def net_login(username,password_hash,password):
     except Exception as e:
         log("error happened: %s"%(e),l=3)
 
-    if "auth4.tsinghua.edu.cn" in content:                    #see comments for test_network
+    s_auth=re.search("http://(auth[4,6]{0}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
+    if s_auth!=None:                    #see comments for test_network
         log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
-        auth4_login(username,password)
+        ac_id=int(s_auth.group(2))
+        auth4_login(username,password,ac_id=ac_id)
     else:
-        log('%d: "%s"'%(post.status_code,content))
+        log('net return %d: "%s"'%(post.status_code,content))
 
 def test_network(test_url):
     """
@@ -264,7 +273,7 @@ def gen_config():
     log("dumped username and password's hash to config.json")
 
 if __name__ == '__main__':
-    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4\n--gen-config"
+    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4 (only for debug)\n--gen-config"
     if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-usereg"):
         try:
             with open("config.json","r") as f:
