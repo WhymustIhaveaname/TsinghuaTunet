@@ -138,7 +138,7 @@ def auth4_login(username,password,ac_id=None):
                 ac_id=1
                 log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
                 log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
-                #近春园西楼39, 四教43, 27号楼宿舍162, 24
+                #近春园西楼39, 四教43, 27号楼宿舍162, 李兆基科技楼24
                 #ac_id=1: {'client_ip': 'x.x.x.x', 'ecode': 'E2833', 'error': 'login_error', 'error_msg': 'E2833: Your IP address is not in the dhcp table. Maybe you need to renew the IP address.', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310934}
                 #wrong ac_id: {'client_ip': 'x.x.x.x', 'ecode': '', 'error': 'login_error', 'error_msg': 'no_response_data_error', 'online_ip': 'x.x.x.x', 'res': 'login_error', 'srun_ver': 'SRunCGIAuthIntfSvr V1.18 B20190423', 'st': 1615310922}
             elif c2.isnumeric():
@@ -173,28 +173,6 @@ def auth4_login(username,password,ac_id=None):
     except:
         log("exception in auth4 login",l=3)
         return -3
-    """
-    try:
-        from bs4 import BeautifulSoup #make output pretty
-        url="https://auth4.tsinghua.edu.cn/succeed_wired.php"
-        params={'ac_id':'1','username':'syr20','ip':ip}
-        g4=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
-        c4=g4.content.decode('utf-8').strip() # g4.encoding is ISO-8859-1 but actually it is utf8
-        soup = BeautifulSoup(c4,'lxml')
-        log('\t'.join([i for i in soup.text.split('\n') if i!='']))
-    except:
-        log("",l=3)
-        return -5"""
-
-"""def usereg_login(username,password_hash):
-    #login via usereg.tsinghua.edu.cn's '准入代认证'
-    log("usereg's login is auth4.",end=" press enter to quit...");input()
-    s=requests.Session()
-    s.headers={"Accept":"*/*","Host":"usereg.tsinghua.edu.cn","User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate"}
-    data={'action':'login','user_login_name':username,'user_password':password_hash.replace("{MD5_HEX}","")}
-    p1=s.post("http://usereg.tsinghua.edu.cn/do.php",data=data)
-    c1=p1.content.decode(p1.encoding)
-    s.headers['Cookie']=p1.headers['Set-Cookie'].split(';')[0]"""
 
 def net_login(username,password_hash,password):
     """
@@ -239,8 +217,8 @@ def test_network(test_url):
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
             content=get.content.decode(get.encoding)
-            if "auth4.tsinghua.edu.cn" in content:
-                return 1                                       #some times tsinghua wants you to login via auth4
+            if "auth" in content and "tsinghua.edu.cn" in content: #some times tsinghua wants you to login via auth4
+                return 1
             else:
                 return 0
         else:
@@ -258,7 +236,7 @@ def test_and_reconnent(username,password_hash,password):
         log("online already")
     elif test_re==1:
         log("not online, reconnecting... reason: Tsinghua wants you to login via auth4",l=2)
-        auth4_login(username,password)
+        net_login(username,password)
     else:
         log("not online, reconnecting... reason: %s"%(test_re),l=2)
         net_login(username,password_hash,password)
