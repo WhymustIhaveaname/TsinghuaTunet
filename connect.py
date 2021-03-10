@@ -222,7 +222,7 @@ def test_network(test_url):
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
             content=get.content.decode(get.encoding)
-            if "auth" in content and "tsinghua.edu.cn" in content: #some times tsinghua wants you to login via auth
+            if "auth" in content and "tsinghua.edu.cn" in content:
                 return "Tsinghua wants you to login via auth"
             else:
                 return 0
@@ -234,8 +234,7 @@ def test_network(test_url):
 def test_and_reconnent(username,password_hash,password):
     """test online or not, if not, login"""
     import random
-    url_pool=["https://baidu.com","https://bing.com","https://github.com","http://baidu.com","http://bing.com","http://github.com"]
-    #url_pool=["http://net.tsinghua.edu.cn",] # for debugging
+    url_pool=["http://baidu.com","http://bing.com","http://github.com"] # https's error output is too long and also misleading
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
