@@ -95,7 +95,7 @@ def xEncode(str, key):
             z = v[n] = v[n] + m & (0xBB390742 | 0x44C6F8BD)
         return l(v, False)
 
-import requests,sys,json,hashlib,base64,hmac,urllib3
+import requests,sys,json,hashlib,base64,hmac,urllib3,re
 
 TIMEOUT=10
 
@@ -106,15 +106,22 @@ def weird_base64_encode(s):
     s=base64.b64encode(s).decode()
     return s.translate({ord(x): y for (x, y) in zip(a, b)}).encode()
 
-def auth4_login(username,password):
+def auth_login(username,password,ac_id=None,ipv=4):
+    """
+        password: plaintext of password
+        ac_id   : a messy parameter in srun's protocol
+        ipv     : ip version, 4 or 6
+    """
     if password==None:
-        log("please update (re-generate) config to get support for auth4",l=2)
+        log("please update (re-generate) config to get support for auth")
         return -4
-    headers={"Accept":"*/*","Host":"auth4.tsinghua.edu.cn",
+
+    headers={"Accept":"*/*",#"Host":"auth%d.tsinghua.edu.cn"%(ipv),
              "User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate","Accept-Language":"zh;q=0.9,en;q=0.8"}
-    # get challenge. I do not know why
+
+    # get challenge. In srun's protocal but I do not know its meaning
     try:
-        url="https://auth4.tsinghua.edu.cn/cgi-bin/get_challenge"
+        url="https://auth%d.tsinghua.edu.cn/cgi-bin/get_challenge"%(ipv)
         params={'callback':'callback','username':username,'ip':'','double_stack':'1','_':int(time.time()*1000)}
         g1=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
         c1=g1.content.decode(g1.encoding).strip()
@@ -126,31 +133,36 @@ def auth4_login(username,password):
     except:
         log("get challenge failed",l=3)
         return -1
-    #
-    try:
-        url="http://usereg.tsinghua.edu.cn/ip_login_import.php"
-        params={'actionType': 'searchNasId', 'ip': ip}
-        g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
-        c2=g2.content.decode(g2.encoding).strip()
-        if c2=='fail':
-            ac_id=1
-            log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
-            log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高，仅在 net 要求跳转 auth4 并且在 auth4 中请求 ac_id 失败时才会发生，据尝试设置 ac_id 为上述（可能不规范）的值可以成功联网。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
-            #近春园西楼39, 四教43, 27号楼宿舍162
-        elif c2.isnumeric():
-            ac_id=int(c2)
-            log("get ac_id: %s"%(ac_id))
-        else:
-            log("get ac_id abnormal: %s"%(c2),l=2)
-            ac_id=1
-        del url,params,g2
-    except:
-        log("exception in getting ac_id",l=3)
-        return -2
+
+    #get ac_id
+    if ac_id==None:
+        try:
+            url="http://usereg.tsinghua.edu.cn/ip_login_import.php"
+            params={'actionType': 'searchNasId', 'ip': ip}
+            g2=requests.post(url,headers=headers,data=params,timeout=TIMEOUT)
+            c2=g2.content.decode(g2.encoding).strip()
+            if c2=='fail':
+                ac_id=1
+                log("get ac_id return 'fail', set it to %d"%(ac_id),l=2)
+                log("comment: ac_id 与网段（地理位置有关），本报错发生概率不高。如果您看到这条消息并且不能联网，请去 https://github.com/WhymustIhaveaname/TsinghuaTunet/issues 提交 issue，我会在一天内回复。")
+                #近春园西楼39, 四教43, 27号楼宿舍162, 李兆基科技楼24
+            elif c2.isnumeric():
+                ac_id=int(c2)
+                log("get ac_id: %s"%(ac_id))
+            else:
+                log("get ac_id abnormal: %s"%(c2),l=2)
+                ac_id=1
+            del url,params,g2
+        except:
+            log("exception in getting ac_id",l=3)
+            return -2
+    else:
+        log("using passed-in ac_id=%d"%(ac_id))
+
     # login!
     n=200;typ=1
     try:
-        url="https://auth4.tsinghua.edu.cn/cgi-bin/srun_portal"
+        url="https://auth%d.tsinghua.edu.cn/cgi-bin/srun_portal"%(ipv)
         info='{SRBX1}'+weird_base64_encode(xEncode(json.dumps({'username':username,'password':password,'ip':ip,'acid':ac_id,'enc_ver':'srun_bx1',}),token)).decode()
         chksum=hashlib.sha1((token+username+token+hmd5+token+'%d'%(ac_id)+token+ip+token+'%d'%(n)+token+'%d'%(typ)+token+info).encode()).hexdigest()
         params={'callback':'callback','action':'login','username':username,'password':'{MD5}'+hmd5,
@@ -164,30 +176,8 @@ def auth4_login(username,password):
             log(c3,l=2)
         del url,params,g3
     except:
-        log("exception in auth4 login",l=3)
+        log("exception in auth%d login"%(ipv),l=3)
         return -3
-    """
-    try:
-        from bs4 import BeautifulSoup #make output pretty
-        url="https://auth4.tsinghua.edu.cn/succeed_wired.php"
-        params={'ac_id':'1','username':'syr20','ip':ip}
-        g4=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
-        c4=g4.content.decode('utf-8').strip() # g4.encoding is ISO-8859-1 but actually it is utf8
-        soup = BeautifulSoup(c4,'lxml')
-        log('\t'.join([i for i in soup.text.split('\n') if i!='']))
-    except:
-        log("",l=3)
-        return -5"""
-
-"""def usereg_login(username,password_hash):
-    #login via usereg.tsinghua.edu.cn's '准入代认证'
-    log("usereg's login is auth4.",end=" press enter to quit...");input()
-    s=requests.Session()
-    s.headers={"Accept":"*/*","Host":"usereg.tsinghua.edu.cn","User-Agent":"Mozilla/5.0","Accept-Encoding":"gzip, deflate"}
-    data={'action':'login','user_login_name':username,'user_password':password_hash.replace("{MD5_HEX}","")}
-    p1=s.post("http://usereg.tsinghua.edu.cn/do.php",data=data)
-    c1=p1.content.decode(p1.encoding)
-    s.headers['Cookie']=p1.headers['Set-Cookie'].split(';')[0]"""
 
 def net_login(username,password_hash,password):
     """
@@ -211,18 +201,23 @@ def net_login(username,password_hash,password):
     except Exception as e:
         log("error happened: %s"%(e),l=3)
 
-    if "auth4.tsinghua.edu.cn" in content:                    #see comments for test_network
-        log("Tsinghua wants you to login via auth4, trying auth4...",l=2)
-        auth4_login(username,password)
+    s_auth=re.search("http://(auth[4,6]{0,1}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
+    if s_auth!=None: #see comments for test_network
+        log("Tsinghua wants you to login via auth (%s), trying..."%(s_auth.group(0)))
+        ac_id=int(s_auth.group(2))
+        auth_login(username,password,ac_id=ac_id)
     else:
-        log('%d: "%s"'%(post.status_code,content))
+        if content=="IP has been online, please logout." or content=="Login is successful.":
+            log('net return %d: "%s"'%(post.status_code,content))
+        else:
+            log('net return %d: "%s"'%(post.status_code,content),l=2)
 
 def test_network(test_url):
     """
         test by getting test_url
-        some times tsinghua wants you to login via auth4
-        so if there is 'auth4.tsinghua.edu.cn' in return webpage then return 1
-        meaning 'trying to login via auth4'
+        some times tsinghua wants you to login via auth
+        so if both 'auth' and 'tsinghua.edu.cn' in return webpage then return 1
+        meaning 'trying to login via auth'
     """
     try:
         headers={"Accept":"*/*"}
@@ -230,8 +225,8 @@ def test_network(test_url):
         get=requests.get(test_url,headers=headers,timeout=10)
         if get.status_code==200:
             content=get.content.decode(get.encoding)
-            if "auth4.tsinghua.edu.cn" in content:
-                return 1                                       #some times tsinghua wants you to login via auth4
+            if "auth" in content and "tsinghua.edu.cn" in content:
+                return "Tsinghua wants you to login via auth"
             else:
                 return 0
         else:
@@ -242,16 +237,12 @@ def test_network(test_url):
 def test_and_reconnent(username,password_hash,password):
     """test online or not, if not, login"""
     import random
-    url_pool=["https://baidu.com","https://bing.com","https://github.com","http://baidu.com","http://bing.com","http://github.com"]
-    #url_pool=["http://net.tsinghua.edu.cn",] # for debugging
+    url_pool=["http://baidu.com","http://bing.com","http://github.com"] # https's error output is too long and also misleading
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
-    elif test_re==1:
-        log("not online, reconnecting... reason: Tsinghua wants you to login via auth4",l=2)
-        auth4_login(username,password)
     else:
-        log("not online, reconnecting... reason: %s"%(test_re),l=2)
+        log("not online, reconnecting... reason: %s"%(test_re))
         net_login(username,password_hash,password)
 
 def gen_config():
@@ -264,8 +255,8 @@ def gen_config():
     log("dumped username and password's hash to config.json")
 
 if __name__ == '__main__':
-    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4\n--gen-config"
-    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-usereg"):
+    help_msg="Tsinghua Tunet auto-connect script\n--test-first\n--connect\nconnect-auth4 (only for debug)\nconnect-auth6 (testing)\n--gen-config"
+    if len(sys.argv)>=2 and sys.argv[1] in ("--test-first","--connect","--connect-auth4","--connect-auth6"):
         try:
             with open("config.json","r") as f:
                 config=json.load(f)
@@ -274,7 +265,7 @@ if __name__ == '__main__':
             if 'password' in config:
                 password=config['password']
             else:
-                log("please update (re-generate) config to get support for auth4",l=2)
+                log("please update (re-generate) config to get support for auth4")
                 password=None
         except:
             log("load config.json failed. make sure a config file is generated by --gen-config")
@@ -284,9 +275,9 @@ if __name__ == '__main__':
             elif sys.argv[1]=="--connect":
                 net_login(username,password_hash,password)
             elif sys.argv[1]=="--connect-auth4":
-                auth4_login(username,password)
-            elif sys.argv[1]=="--connect-usereg":
-                usereg_login(username,password_hash)
+                auth_login(username,password,ipv=4)
+            elif sys.argv[1]=="--connect-auth6":
+                auth_login(username,password,ipv=6)
             else:
                 log(help_msg)
     elif len(sys.argv)>=2 and sys.argv[1]=="--gen-config":
