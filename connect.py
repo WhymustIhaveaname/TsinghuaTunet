@@ -199,7 +199,8 @@ def net_login(username,password_hash,password):
         post=requests.post(url,headers=headers,data=data,timeout=TIMEOUT,verify=False,allow_redirects=True)
         content=post.content.decode("gbk") # post.encoding is "ISO-8859-1" but it is wrong
     except Exception as e:
-        log("error happened: %s"%(e),l=3)
+        log("error happened: %s"%(e),l=2)
+        return -1
 
     s_auth=re.search("http://(auth[4,6]{0,1}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
     if s_auth!=None: #see comments for test_network
@@ -237,7 +238,8 @@ def test_network(test_url):
 def test_and_reconnent(username,password_hash,password):
     """test online or not, if not, login"""
     import random
-    url_pool=["http://baidu.com","http://bing.com","http://github.com"] # https's error output is too long and also misleading
+    url_pool=["http://baidu.com","http://bing.com","http://github.com","http://its.pku.edu.cn"] # https's error output is too long and also misleading
+    #url_pool=["http://its.pku.edu.cn"] #for test
     test_re=test_network(random.choice(url_pool))
     if test_re==0:
         log("online already")
