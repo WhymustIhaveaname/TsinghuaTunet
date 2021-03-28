@@ -123,7 +123,7 @@ def auth_login(username,password,ac_id=None,ipv=4):
     try:
         url="https://auth%d.tsinghua.edu.cn/cgi-bin/get_challenge"%(ipv)
         params={'callback':'callback','username':username,'ip':'','double_stack':'1','_':int(time.time()*1000)}
-        g1=requests.get(url,headers=headers,params=params,timeout=TIMEOUT)
+        g1=requests.get(url,headers=headers,params=params,timeout=TIMEOUT,verify=False)
         c1=g1.content.decode(g1.encoding).strip()
         challenge=json.loads(c1[len("callback("):-1])
         token=challenge['challenge']
@@ -132,6 +132,8 @@ def auth_login(username,password,ac_id=None,ipv=4):
         del url,params,g1
     except:
         log("get challenge failed",l=3)
+        if 'c1' in dir():
+            log("get_challenge return: %s"%(c1))
         return -1
 
     #get ac_id
@@ -202,16 +204,22 @@ def net_login(username,password_hash,password):
         log("error happened: %s"%(e),l=2)
         return -1
 
-    s_auth=re.search("http://(auth[4,6]{0,1}\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
-    if s_auth!=None: #see comments for test_network
-        log("Tsinghua wants you to login via auth (%s), trying..."%(s_auth.group(0)))
+    s_auth4=re.search("http://(auth4\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
+    if s_auth4!=None: #see comments for test_network
+        log("Tsinghua wants you to login via auth4 (%s), trying..."%(s_auth.group(0)))
         ac_id=int(s_auth.group(2))
         auth_login(username,password,ac_id=ac_id)
+
+    s_auth6=re.search("http://(auth6\\.tsinghua\\.edu\\.cn)/index_([0-9]+)\\.html",content)
+    if s_auth4!=None:
+        log("Tsinghua wants you to login via auth6 (%s), trying..."%(s_auth.group(0)))
+        ac_id=int(s_auth.group(2))
+        auth_login(username,password,ac_id=ac_id,ipv=6)
+
+    if content=="IP has been online, please logout." or content=="Login is successful.":
+        log('net return %d: "%s"'%(post.status_code,content))
     else:
-        if content=="IP has been online, please logout." or content=="Login is successful.":
-            log('net return %d: "%s"'%(post.status_code,content))
-        else:
-            log('net return %d: "%s"'%(post.status_code,content),l=2)
+        log('net return %d: "%s"'%(post.status_code,content),l=2)
 
 def test_network(test_url):
     """
