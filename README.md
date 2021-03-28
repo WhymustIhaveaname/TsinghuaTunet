@@ -42,6 +42,14 @@
 * [深澜认证协议分析,python模拟登录](https://zhuanlan.zhihu.com/p/122556315)
 * [ZenithalHourlyRate/thuservices/utils.md#校园网认证工具汇总](https://github.com/ZenithalHourlyRate/thuservices/blob/master/utils.md#%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%AE%A4%E8%AF%81%E5%B7%A5%E5%85%B7%E6%B1%87%E6%80%BB)
 
+### Hosts
+
+In case any one needs related IPs.
+```
+166.111.204.120                net.tsinghua.edu.cn
+101.6.4.100                    auth4.tsinghua.edu.cn
+2402:f000:1:414:101:6:4:100    auth6.tsinghua.edu.cn
+```
 
 ### 使用crontab重复执行脚本
 
