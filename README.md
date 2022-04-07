@@ -40,7 +40,7 @@
 * [yuantailing/tunet-python](https://github.com/yuantailing/tunet-python) (我 fork 到了 [WhymustIhaveaname/tunet-python](https://github.com/WhymustIhaveaname/tunet-python))
 * [深澜校园网登录的分析与python实现-北京理工大学版](https://blog.csdn.net/qq_41797946/article/details/89417722)
 * [深澜认证协议分析,python模拟登录](https://zhuanlan.zhihu.com/p/122556315)
-* [ZenithalHourlyRate/thuservices/utils.md#校园网认证工具汇总](https://github.com/ZenithalHourlyRate/thuservices/blob/master/utils.md#%E6%A0%A1%E5%9B%AD%E7%BD%91%E8%AE%A4%E8%AF%81%E5%B7%A5%E5%85%B7%E6%B1%87%E6%80%BB)
+* [ZenithalHourlyRate/thuservices/utils.md#校园网认证工具汇总](https://github.com/ZenithalHourlyRate/thuservices/)
 
 ### Hosts
 
